@@ -3,8 +3,6 @@ services:
     build:
       context: mongo
     image: ${REPO}/rs-mongodb:${TAG}
-    volumes:
-      - mongodb-data:/data/db
     networks:
       - robot-shop
     logging: &logging
