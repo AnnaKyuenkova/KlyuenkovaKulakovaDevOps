@@ -21,16 +21,14 @@ pipeline {
                         userRemoteConfigs: [[url: 'https://github.com/cassiopka/robot-shop.git']]
                     ])
                     env.BRANCH_NAME = 'test'
-                    sh 'cp -v /tmp/test/main_test.go dispatch/'
                 }
             }
         }
 
-        stage('Code Unit testing') {
+        stage('Security Analysis DB') {
             agent {
-                docker {
-                    image 'golang:1.23.4'
-                    args '-v /home/jenkins/agent/workspace/:/workspace --user root'
+                node {
+                    label 'test'
                 }
             }
             when {
@@ -38,10 +36,20 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'cd dispatch && go get -v &&  go test -v'
+                    sh '''
+                    docker run \
+                        --rm \
+                        -e SONAR_HOST_URL="http://192.168.122.135:9000" \
+                        -e SONAR_TOKEN="sqa_455e28c93cc465733e935ccff501618a964923d4" \
+                        -v "${WORKSPACE}/db_schema:/usr/src" \
+                        sonarsource/sonar-scanner-cli \
+                        -Dsonar.projectKey=examples.sql.psql.project \
+                        -Dsonar.sources=/usr/src
+                    '''
                 }
             }
         }
+
 
         stage('Code Quality Analysis') {
             agent {
